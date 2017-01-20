@@ -4,53 +4,60 @@ var roleHarvester = {
 
     /** @param {Creep} creep **/
     run: function (creep) {
-        if(creep.memory.returning && creep.carry.energy == 0) {
-            creep.memory.returning = false;
+
+        // if target is defined and creep is not in target room
+        if (creep.memory.target != undefined && creep.room.name != creep.memory.target) {
+            if (!creep.fatigue) {
+                // find exit to target room
+                var exit = creep.room.findExitTo(creep.memory.target);
+                // move to exit
+                creep.moveTo(creep.pos.findClosestByRange(exit));
+            }
+            // return the function to not do anything else
+            return;
+        }
+
+
+        if(creep.memory.working && creep.carry.energy == 0) {
+            creep.memory.working = false;
 	    }
-	    if(!creep.memory.returning && creep.carry.energy == creep.carryCapacity) {
-	        creep.memory.returning = true;
+	    if(!creep.memory.working && creep.carry.energy == creep.carryCapacity) {
+	        creep.memory.working = true;
 	    }
 
-	    if(creep.memory.returning) {
-            var targets = creep.room.find(FIND_STRUCTURES, {
-                filter: (structure) => {
-                    return ((structure.structureType == STRUCTURE_EXTENSION ||
-                        structure.structureType == STRUCTURE_SPAWN ||
-                        structure.structureType == STRUCTURE_TOWER) && structure.energy < structure.energyCapacity)
-                }
-            });
-            if (targets.length > 0) {
-                if (creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(targets[0]);
-                }
-            }
+	    if(creep.memory.working) {
+	        var structure = creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
+	            // the second argument for findClosestByPath is an object which takes
+	            // a property called filter which can be a function
+	            // we use the arrow operator to define it
+	            filter: (s) => (s.structureType == STRUCTURE_SPAWN
+                             || s.structureType == STRUCTURE_EXTENSION
+                             || s.structureType == STRUCTURE_TOWER)
+                             && s.energy < s.energyCapacity
+	        });
+
+	        if (structure == undefined) {
+	            structure = creep.room.storage;
+	        }
+
+	        // if we found one
+	        if (structure != undefined) {
+	            // try to transfer energy, if it is not in range
+	            if (creep.transfer(structure, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE && !creep.fatigue) {
+	                // move towards it
+	                creep.moveTo(structure);
+	            }
+	        }
             else{
                 roleUpgrader.run(creep);
             }
         }
-        else {
-
-	        
-	        var dropenergy = creep.pos.findClosestByPath(FIND_DROPPED_ENERGY, {
-	            filter: (e) => e.amount > 50
-	        });
-
-            if (dropenergy) {
-                if (creep.pickup(dropenergy) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(dropenergy);
-                }
-            }
-            else {
-            //harvest if no dropped energy
-                var sources = creep.room.find(FIND_SOURCES);
-                if(creep.harvest(sources[1]) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(sources[1]);
-                }
-            }
+	    else {
+	        creep.getEnergy();
         }
     }
-    
-    
+
+
 };
 
 module.exports = roleHarvester;

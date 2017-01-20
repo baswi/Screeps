@@ -4,19 +4,30 @@ var roleBuilder = {
 
     /** @param {Creep} creep **/
     run: function (creep) {
-
-        if (creep.memory.building && creep.carry.energy == 0) {
-            creep.memory.building = false;
+        // if target is defined and creep is not in target room
+        if (creep.memory.target != undefined && creep.room.name != creep.memory.target) {
+            if (!creep.fatigue) {
+                // find exit to target room
+                var exit = creep.room.findExitTo(creep.memory.target);
+                // move to exit
+                creep.moveTo(creep.pos.findClosestByRange(exit));
+            }
+            // return the function to not do anything else
+            return;
         }
-        if (!creep.memory.building && creep.carry.energy == creep.carryCapacity) {
-            creep.memory.building = true;
+
+        if (creep.memory.working && creep.carry.energy == 0) {
+            creep.memory.working = false;
+        }
+        if (!creep.memory.working && creep.carry.energy == creep.carryCapacity) {
+            creep.memory.working = true;
         }
 
-        if (creep.memory.building) {
+        if (creep.memory.working) {
 
             var target = creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES);
             if (target) {
-                if (creep.build(target) == ERR_NOT_IN_RANGE) {
+                if (creep.build(target) == ERR_NOT_IN_RANGE && !creep.fatigue) {
                     creep.moveTo(target);
                 }
             }
@@ -29,8 +40,8 @@ var roleBuilder = {
                     }
                 });
 
-                if (repairitnow.length > 0) {
-                    if (creep.repair(repairitnow[0]) == ERR_NOT_IN_RANGE) {
+                if (repairitnow.length) {
+                    if (creep.repair(repairitnow[0]) == ERR_NOT_IN_RANGE && !creep.fatigue) {
                         creep.moveTo(repairitnow[0]);
                     }
                 }
@@ -41,13 +52,7 @@ var roleBuilder = {
                         }
                     });
 
-                    var repairwall = creep.room.find(FIND_STRUCTURES, {
-                        filter: (structure) => {
-                            return ((structure.structureType == STRUCTURE_RAMPART && structure.hits < structure.hitsMax && structure.hits > 0) ||
-                            (structure.hits < 150000 && structure.hits > 0 && structure.structureType == STRUCTURE_WALL))
-                        }
-                    });
-                    if (repairit.length > 0) {
+                    if (repairit.length) {
                         if (creep.repair(repairit[0]) == ERR_NOT_IN_RANGE) {
                             creep.moveTo(repairit[0]);
                         }
@@ -58,26 +63,10 @@ var roleBuilder = {
                 }
             }
         }
-            
-        
+
+
 	    else {
-
-            var dropenergy = creep.pos.findClosestByPath(FIND_DROPPED_ENERGY, {
-                filter: (e) => e.amount > 50
-            });
-
-            if (dropenergy) {
-                if (creep.pickup(dropenergy) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(dropenergy);
-                }
-            }
-            else {
-                //harvest if no dropped energy
-                var sources = creep.room.find(FIND_SOURCES);
-                if (creep.harvest(sources[0]) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(sources[0]);
-                }
-            }
+            creep.getEnergy();
         }
     }
 };
