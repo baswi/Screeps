@@ -2,6 +2,7 @@
  *          source = the source that shall be mined
  *          container = if undefined mine and put the energy on the ground. If it has a object-ID go to that (container) and harvest
  ***/
+var memCtrl = require('memoryControl');
 var roleMiner = {
 
         /** @param {Creep} creep **/
@@ -15,19 +16,19 @@ var roleMiner = {
                     console.log('Room ' + creep.room.name + ' Source ' + i + ' mining set to: ' + creep.room.memory.sources[i].mining);
                 }
                 // check if this source shall be mined. When yes check if it is free
-                    if (creep.room.memory.sources[i].mining &&
+                else if (creep.room.memory.sources[i].mining &&
                         (((Game.getObjectById(creep.room.memory.sources[i].minerID)) == null) ||
                         (Game.getObjectById(creep.room.memory.sources[i].minerID) == creep))) {
-                            // save new miner into the room memory
-                            creep.room.memory.sources[i].minerID = creep.id;
-                            // save the source in the creeps memory
-                            creep.memory.source = creep.room.memory.sources[i].sourceID;
+                        // save new miner into the room memory
+                        creep.room.memory.sources[i].minerID = creep.id;
+                        // save the source in the creeps memory
+                        creep.memory.source = creep.room.memory.sources[i].sourceID;
                         // are there any containers next to the source?
-                            let container = creep.room.memory.sources[i].container;
-                            if (container != undefined) {
-                                creep.memory.container = container;
-                            }
-                            break;
+                        let container = creep.room.memory.sources[i].container;
+                        if (container != undefined) {
+                            creep.memory.container = container;
+                        }
+                        break;
                     }
                 }
 // check if the miner actually found a source
@@ -36,13 +37,16 @@ var roleMiner = {
             }
         }
 
-
         var source = Game.getObjectById(creep.memory.source);
         // should the creep mine into a container?
         if (creep.memory.container != undefined) {
-            let container = Game.getObjectById(creep.memory.container);
+            let container;
+            if ((container = Game.getObjectById(creep.memory.container)) == null) {
+                creep.memory.container = undefined;
+                memCtrl.checkRoomSourcesForContainer();
+            }
             // if creep is on top of the container
-            if (creep.pos.isEqualTo(container.pos)) {
+            else if (creep.pos.isEqualTo(container.pos)) {
                 // harvest source
                 creep.harvest(source);
             }

@@ -1,4 +1,6 @@
-﻿module.exports = {
+﻿var memCtrl = require('memoryControl');
+
+module.exports = {
     // a function to run the logic for this role
     /** @param {Creep} creep */
     run: function (creep) {
@@ -43,8 +45,11 @@
                 let containers = [];
                 for (let cID in creep.room.memory.containerForEnergy) {
                     let container = Game.getObjectById(creep.room.memory.containerForEnergy[cID]);
-                    if (container != null && container.store[RESOURCE_ENERGY] < container.storeCapacity) {
-                        containers.push(Game.getObjectById(creep.room.memory.containerForEnergy[cID]));
+                    if (container == null) {
+                        memCtrl.checkRoomForContainerToDeliverEnergyTo();
+                    }
+                    else if (container != null && container.store[RESOURCE_ENERGY] < container.storeCapacity) {
+                        containers.push(container);
                     }
                 }
                 structure = creep.pos.findClosestByPath(containers);
@@ -112,7 +117,7 @@
                     container = creep.room.storage;
                     // if everything is empty have a look at the rest of the containers (if there are any?!?)
                     if (container == undefined || container.store[RESOURCE_ENERGY] == 0) {
-                        container = this.pos.findClosestByPath(FIND_STRUCTURES, {
+                        container = creep.pos.findClosestByPath(FIND_STRUCTURES, {
                             filter: s => (s.structureType == STRUCTURE_CONTAINER || s.structureType == STRUCTURE_STORAGE) &&
                                          s.store[RESOURCE_ENERGY] > 0
                         });

@@ -38,11 +38,11 @@ var configWallSettings = false;
 
 // let the room check if there are any containers at the sources (used by miners & lorries)
 var roomToCheckForContainers = 'W76S9';
-var startTheMiningContainerCheck = true;
+var startTheMiningContainerCheck = false;
 
 // let the room check if there are any containers that should be supplied with energy
 var roomToCheckForEnergyReceivingContainers = 'W76S9';
-var startTheReceivingContainersCheck = true;
+var startTheReceivingContainersCheck = false;
 
 
 

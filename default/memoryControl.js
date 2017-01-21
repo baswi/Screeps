@@ -38,6 +38,7 @@
         if (room.memory.containerForEnergy == undefined) {
             room.memory.containerForEnergy = [];
         }
+        let writeToMemory = [];
         let containers = room.find(FIND_STRUCTURES, {
             filter: s => s.structureType == STRUCTURE_CONTAINER
                       && s.id != room.memory.sources[0].container
@@ -45,17 +46,9 @@
         });
         if (containers != null) {
             for (let container in containers) {
-                let foundInMemory = false;
-                let containerID = containers[container].id;
-                for (let id in room.memory.containerForEnergy) {
-                    if (room.memory.containerForEnergy[id] == containerID) {
-                        foundInMemory = true;
-                    }
-                }
-                if (!foundInMemory) {
-                    room.memory.containerForEnergy.push(containers[container].id);
-                }
+                writeToMemory.push(containers[container].id);
             }
+            room.memory.containerForEnergy = writeToMemory;
         }
     },
 
@@ -68,6 +61,9 @@
             })[0];
             if (container != undefined) {
                 room.memory.sources[source].container = container.id;
+            }
+            else {
+                room.memory.sources[source].container = undefined;
             }
         }
     },
